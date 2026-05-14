@@ -8,6 +8,7 @@ const { Server } = require("socket.io");
 const { databasePath } = require("./db");
 const authRoutes = require("./routes/authRoutes");
 const blockRoutes = require("./routes/blockRoutes");
+const directMessageRoutes = require("./routes/directMessageRoutes");
 const friendRoutes = require("./routes/friendRoutes");
 const worldRoutes = require("./routes/worldRoutes");
 const configureSockets = require("./socket");
@@ -53,6 +54,7 @@ app.get("/api/health", (req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/direct-messages", directMessageRoutes);
 app.use("/api/friends", friendRoutes);
 app.use("/api/worlds/:worldId/blocks", blockRoutes);
 app.use("/api/worlds", worldRoutes);
@@ -79,6 +81,7 @@ const io = new Server(server, {
   }
 });
 
+app.set("io", io);
 configureSockets(io);
 
 server.listen(port, () => {

@@ -20,7 +20,8 @@ body {
 }
 
 button,
-input {
+input,
+textarea {
   font: inherit;
 }
 
@@ -201,12 +202,25 @@ input:focus {
   margin-bottom: 0;
 }
 
+.topbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
 .dashboard-grid {
   display: grid;
   grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
   gap: 18px;
   max-width: 1180px;
   margin: 0 auto;
+  align-items: start;
+}
+
+.dashboard-world-column {
+  display: grid;
+  gap: 18px;
 }
 
 .panel {
@@ -220,6 +234,7 @@ input:focus {
 .panel-header,
 .inline-form,
 .friend-row,
+.request-row,
 .world-card,
 .card-actions {
   display: flex;
@@ -283,16 +298,360 @@ code {
   gap: 8px;
 }
 
-.friend-row {
+.friend-list-scroll {
+  max-height: 520px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.friend-add-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.friend-add-form .primary-button {
+  min-width: 116px;
+  min-height: 42px;
+  padding: 8px 12px;
+  white-space: nowrap;
+}
+
+.request-entry-list {
+  display: grid;
+  gap: 8px;
+  border-bottom: 1px solid #e5edf3;
+  margin-bottom: 14px;
+  padding-bottom: 14px;
+}
+
+.request-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  border: 1px solid #dce5ec;
+  border-radius: 8px;
+  background: #fbfdff;
+  color: #243442;
+  padding: 10px 12px;
+  text-align: left;
+}
+
+.request-entry:hover {
+  background: #f1f7f3;
+}
+
+.request-entry span {
+  font-weight: 800;
+}
+
+.request-entry strong {
+  display: grid;
+  place-items: center;
+  min-width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: #2f7d4d;
+  color: #ffffff;
+  font-size: 0.84rem;
+}
+
+.friend-row,
+.request-row {
   justify-content: space-between;
   border-bottom: 1px solid #e5edf3;
+  gap: 10px;
   padding: 8px 0;
 }
 
-.friend-row span {
+.friend-row.active {
+  border-radius: 8px;
+  background: #f1f7f3;
+  padding: 8px;
+}
+
+.friend-row span,
+.request-row span {
   display: block;
   color: #667988;
   font-size: 0.9rem;
+}
+
+.friend-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.friend-actions .secondary-button,
+.friend-actions .ghost-button {
+  min-height: 34px;
+  padding: 7px 10px;
+}
+
+.status-pill {
+  border: 1px solid #d9e4ec;
+  border-radius: 999px;
+  background: #f4f8fb;
+  padding: 5px 8px;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.request-page {
+  max-width: 780px;
+  margin: 0 auto;
+}
+
+.request-list {
+  display: grid;
+  gap: 8px;
+}
+
+.request-page-row {
+  border: 1px solid #e5edf3;
+  border-radius: 8px;
+  background: #fbfdff;
+  padding: 12px;
+}
+
+.request-page-row:last-child {
+  border-bottom: 1px solid #e5edf3;
+}
+
+.request-empty {
+  display: grid;
+  min-height: 260px;
+  place-content: center;
+  text-align: center;
+}
+
+.dashboard-chat {
+  display: grid;
+  gap: 10px;
+  border-top: 1px solid #e5edf3;
+  margin-top: 16px;
+  padding-top: 16px;
+}
+
+.dashboard-chat-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.dashboard-chat-header span {
+  color: #667988;
+  font-size: 0.9rem;
+}
+
+.dashboard-chat-messages {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-height: 180px;
+  max-height: 260px;
+  overflow-y: auto;
+  border: 1px solid #e2ebf2;
+  border-radius: 8px;
+  background: #f8fbfd;
+  padding: 10px;
+}
+
+.dashboard-chat-message {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.dashboard-chat-message.own {
+  justify-content: flex-end;
+}
+
+.dashboard-chat-message > div {
+  max-width: 78%;
+  border: 1px solid #dce5ec;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 7px 9px;
+}
+
+.dashboard-chat-message.own > div {
+  border-color: #b9d7c4;
+  background: #e9f8ee;
+}
+
+.dashboard-chat-message span {
+  display: block;
+  color: #667988;
+  font-size: 0.72rem;
+  font-weight: 800;
+  margin-bottom: 3px;
+}
+
+.dashboard-chat-message p {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-size: 0.9rem;
+}
+
+.dashboard-chat-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.messages-layout {
+  display: grid;
+  grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
+  gap: 18px;
+  max-width: 1180px;
+  min-height: min(680px, calc(100vh - 140px));
+  margin: 0 auto;
+}
+
+.conversations-panel,
+.messages-panel {
+  min-height: 0;
+}
+
+.conversation-list {
+  display: grid;
+  gap: 8px;
+}
+
+.conversation-section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-top: 1px solid #e5edf3;
+  margin-top: 18px;
+  padding-top: 18px;
+}
+
+.conversation-section-title span {
+  color: #667988;
+}
+
+.conversation-row {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #17212b;
+  padding: 10px;
+  text-align: left;
+}
+
+.conversation-row:hover,
+.conversation-row.active {
+  background: #f1f7f3;
+}
+
+.conversation-avatar {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #d8eadf;
+  color: #245b36;
+  font-weight: 900;
+}
+
+.conversation-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.conversation-copy strong,
+.conversation-copy small,
+.conversation-copy em {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.conversation-copy small {
+  color: #667988;
+  font-size: 0.82rem;
+}
+
+.conversation-copy em {
+  color: #506575;
+  font-size: 0.86rem;
+  font-style: normal;
+}
+
+.messages-panel {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 12px;
+}
+
+.messages-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid #e5edf3;
+  padding-bottom: 12px;
+}
+
+.messages-header h2 {
+  margin-bottom: 2px;
+}
+
+.messages-header span {
+  color: #667988;
+  font-size: 0.9rem;
+}
+
+.messages-request-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.messages-notice,
+.messages-disabled-input {
+  border: 1px solid #d9e4ec;
+  border-radius: 8px;
+  background: #f8fbfd;
+  color: #506575;
+  padding: 10px 12px;
+}
+
+.messages-notice {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.messages-disabled-input {
+  font-weight: 700;
+}
+
+.messages-empty {
+  display: grid;
+  min-height: 420px;
+  place-content: center;
+  text-align: center;
+}
+
+.messages-thread {
+  min-height: 420px;
+  max-height: none;
 }
 
 .toast {
@@ -360,6 +719,7 @@ code {
 
 .world-topbar,
 .players-panel,
+.chat-panel,
 .hotbar,
 .world-error {
   position: absolute;
@@ -388,22 +748,100 @@ code {
 }
 
 .players-panel {
-  top: 86px;
+  top: 18px;
   right: 18px;
   display: grid;
   gap: 6px;
   min-width: 150px;
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  border-radius: 8px;
-  background: rgba(23, 33, 43, 0.48);
+  border: 0;
+  border-radius: 0;
+  background: rgba(0, 0, 0, 0.22);
   color: #ffffff;
-  padding: 12px;
-  backdrop-filter: blur(10px);
+  padding: 8px 10px;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.82);
 }
 
 .players-panel span {
-  color: #dceefa;
+  color: #ffffff;
   font-size: 0.9rem;
+}
+
+.chat-panel {
+  top: 104px;
+  left: 18px;
+  display: grid;
+  gap: 4px;
+  width: min(380px, calc(100vw - 36px));
+  max-height: 230px;
+  color: #ffffff;
+  pointer-events: none;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.82);
+}
+
+.chat-panel.active {
+  pointer-events: auto;
+}
+
+.chat-messages {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 150px;
+  overflow: hidden;
+  padding: 4px;
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.chat-panel.active .chat-messages {
+  overflow-y: auto;
+  background: rgba(0, 0, 0, 0.34);
+}
+
+.chat-message {
+  display: block;
+  transition: opacity 0.3s ease;
+  overflow-wrap: anywhere;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 0.92rem;
+  line-height: 1.22;
+}
+
+.chat-author {
+  color: #f2f2f2;
+  margin-right: 6px;
+}
+
+.chat-text {
+  color: #ffffff;
+}
+
+.chat-form {
+  pointer-events: auto;
+}
+
+.chat-form textarea {
+  width: 100%;
+  max-height: 76px;
+  border: 0;
+  border-radius: 0;
+  background: rgba(0, 0, 0, 0.42);
+  color: #ffffff;
+  padding: 7px 8px;
+  outline: none;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 0.95rem;
+  line-height: 1.25;
+  resize: none;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.82);
+}
+
+.chat-form textarea::placeholder {
+  color: #ffffff;
+  opacity: 0.96;
+}
+
+.chat-form textarea:focus {
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.26);
 }
 
 .hotbar {
@@ -563,22 +1001,83 @@ code {
 
   .topbar,
   .world-card,
-  .inline-form {
+  .inline-form,
+  .friend-row,
+  .request-row {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .topbar-actions {
+    justify-content: stretch;
   }
 
   .card-actions {
     justify-content: stretch;
   }
 
+  .friend-actions,
+  .messages-request-actions {
+    justify-content: stretch;
+  }
+
+  .topbar-actions button,
+  .friend-actions button,
+  .messages-request-actions button,
   .card-actions button,
   .inline-form button {
     width: 100%;
   }
 
+  .friend-add-form {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .friend-add-form .primary-button {
+    width: auto;
+  }
+
+  .friend-list-scroll {
+    max-height: 420px;
+  }
+
+  .messages-layout {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  .messages-panel {
+    min-height: 480px;
+  }
+
+  .messages-empty {
+    min-height: 260px;
+  }
+
+  .messages-thread {
+    min-height: 280px;
+  }
+
+  .dashboard-chat-form {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-chat-form button {
+    width: 100%;
+  }
+
   .players-panel {
     display: none;
+  }
+
+  .chat-panel {
+    top: 82px;
+    left: 12px;
+    width: min(320px, calc(100vw - 24px));
+  }
+
+  .chat-messages {
+    max-height: 160px;
   }
 
   .hotbar {

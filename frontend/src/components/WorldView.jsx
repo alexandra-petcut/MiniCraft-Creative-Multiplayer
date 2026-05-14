@@ -19,6 +19,11 @@ const REMOTE_POSITION_LERP_SPEED = 16;
 const REMOTE_ROTATION_LERP_SPEED = 18;
 const HOTBAR_SLOT_COUNT = 9;
 const MIN_NON_CHICKEN_DEATH_VISIBLE_MS = 900;
+const CHAT_MESSAGE_LIMIT = 50;
+const CHAT_MESSAGE_MAX_LENGTH = 200;
+const CHAT_PREVIEW_VISIBLE_MS = 10000;
+const CHAT_PREVIEW_FADE_MS = 3000;
+const CHAT_CLOCK_INTERVAL_MS = 500;
 const BLOCK_LOOKUP = new Map(BLOCK_TYPES.map((block) => [block.id, block]));
 
 function createDefaultHotbarSlots() {
@@ -54,6 +59,8 @@ export default function WorldView({ api, token, user, worldId, onExit }) {
   const hotbarSlotsRef = useRef(createDefaultHotbarSlots());
   const selectedSlotRef = useRef(0);
   const inventoryOpenRef = useRef(false);
+  const chatOpenRef = useRef(false);
+  const chatInputRef = useRef(null);
   const keysRef = useRef(new Set());
   const yawRef = useRef(0);
   const pitchRef = useRef(-0.2);
@@ -63,9 +70,20 @@ export default function WorldView({ api, token, user, worldId, onExit }) {
   const [selectedSlot, setSelectedSlot] = useState(0);
   const [selectedBlock, setSelectedBlock] = useState(BLOCK_TYPES[0].id);
   const [inventoryOpen, setInventoryOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatInput, setChatInput] = useState("");
+  const [chatMessages, setChatMessages] = useState([]);
+  const [chatNow, setChatNow] = useState(Date.now());
   const [connectedPlayers, setConnectedPlayers] = useState([]);
   const [notice, setNotice] = useState("Click the world to lock pointer");
   const [error, setError] = useState("");
+
+  const visibleChatMessages = useMemo(() => {
+    if (chatOpen) return chatMessages;
+
+    return chatMessages.filter((message) => chatNow - message.receivedAt < CHAT_PREVIEW_VISIBLE_MS);
+  }, [chatMessages, chatNow, chatOpen]);
+  const chatPanelVisible = chatOpen || visibleChatMessages.length > 0;
 
   const blockMaterials = useMemo(() => {
     const materials = new Map();
@@ -83,10 +101,12 @@ export default function WorldView({ api, token, user, worldId, onExit }) {
 
     for (const block of BLOCK_TYPES) {
       const textureSet = BLOCK_TEXTURES[block.id];
+      const usesCutoutTexture = block.kind === "spawnEgg";
       const materialOptions = {
         transparent: Boolean(block.transparent),
         opacity: block.transparent ? 0.62 : 1,
-        depthWrite: !block.transparent
+        depthWrite: !block.transparent,
+        alphaTest: usesCutoutTexture ? 0.1 : 0
       };
 
       // BoxGeometry material order: right, left, top, bottom, front, back.
@@ -122,6 +142,25 @@ export default function WorldView({ api, token, user, worldId, onExit }) {
     inventoryOpenRef.current = inventoryOpen;
   }, [inventoryOpen]);
 
+  useEffect(() => {
+    const intervalId = window.setInterval(() => setChatNow(Date.now()), CHAT_CLOCK_INTERVAL_MS);
+    return () => window.clearInterval(intervalId);
+  }, []);
+
+  useEffect(() => {
+    chatOpenRef.current = chatOpen;
+
+    if (chatOpen) {
+      window.setTimeout(() => chatInputRef.current?.focus(), 0);
+    }
+  }, [chatOpen]);
+
+  useEffect(() => {
+    setChatMessages([]);
+    setChatInput("");
+    setChatOpen(false);
+  }, [worldId]);
+
   function openInventory() {
     keysRef.current.clear();
     document.exitPointerLock?.();
@@ -139,6 +178,45 @@ export default function WorldView({ api, token, user, worldId, onExit }) {
     }
 
     openInventory();
+  }
+
+  function openChat() {
+    keysRef.current.clear();
+    document.exitPointerLock?.();
+    setChatOpen(true);
+    window.setTimeout(() => chatInputRef.current?.focus(), 0);
+  }
+
+  function closeChat() {
+    setChatOpen(false);
+    setChatInput("");
+    chatInputRef.current?.blur();
+  }
+
+  function sendChatMessage(event) {
+    event.preventDefault();
+
+    const text = chatInput.trim();
+    if (!text) {
+      setChatInput("");
+      return;
+    }
+
+    socketRef.current?.emit("chat:send", { worldId, text }, (response) => {
+      if (!response?.ok) {
+        setNotice(response?.error || "Message failed");
+      }
+    });
+
+    setChatInput("");
+    setChatOpen(false);
+  }
+
+  function handleChatInputKeyDown(event) {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      event.currentTarget.form?.requestSubmit();
+    }
   }
 
   function handleBlockDragStart(event, blockId) {
@@ -341,6 +419,12 @@ export default function WorldView({ api, token, user, worldId, onExit }) {
     socket.on("player:left", ({ socketId }) => {
       setConnectedPlayers((players) => players.filter((player) => player.socketId !== socketId));
       removePlayerMesh(socketId);
+    });
+
+    socket.on("chat:message", ({ message }) => {
+      const receivedAt = Date.now();
+      setChatNow(receivedAt);
+      setChatMessages((messages) => [...messages, { ...message, receivedAt }].slice(-CHAT_MESSAGE_LIMIT));
     });
 
     socket.on("animal:spawned", ({ animal }) => {
@@ -548,6 +632,29 @@ export default function WorldView({ api, token, user, worldId, onExit }) {
     }
 
     function onKeyDown(event) {
+      if (chatOpenRef.current) {
+        if (event.code === "Escape") {
+          event.preventDefault();
+          closeChat();
+          return;
+        }
+
+        if (event.key === "/" || event.code === "Slash") {
+          const draft = chatInputRef.current?.value || "";
+          if (!draft.trim()) {
+            event.preventDefault();
+            closeChat();
+          }
+        }
+        return;
+      }
+
+      if (!inventoryOpenRef.current && (event.key === "/" || event.code === "Slash")) {
+        event.preventDefault();
+        openChat();
+        return;
+      }
+
       if (event.code === "KeyI") {
         event.preventDefault();
         toggleInventory();
@@ -627,6 +734,24 @@ export default function WorldView({ api, token, user, worldId, onExit }) {
 
     function onContextMenu(event) {
       event.preventDefault();
+    }
+
+    function onWheel(event) {
+      if (event.target !== renderer.domElement || inventoryOpenRef.current || event.deltaY === 0) return;
+
+      event.preventDefault();
+
+      const direction = event.deltaY > 0 ? 1 : -1;
+      const slotIndex = (selectedSlotRef.current + direction + HOTBAR_SLOT_COUNT) % HOTBAR_SLOT_COUNT;
+      const blockId = hotbarSlotsRef.current[slotIndex];
+
+      setSelectedSlot(slotIndex);
+      selectedSlotRef.current = slotIndex;
+
+      if (blockId) {
+        setSelectedBlock(blockId);
+        selectedRef.current = blockId;
+      }
     }
 
     function getTargetIntersection() {
@@ -801,6 +926,7 @@ export default function WorldView({ api, token, user, worldId, onExit }) {
     window.addEventListener("mousemove", onMouseMove);
     renderer.domElement.addEventListener("pointerdown", onPointerDown);
     renderer.domElement.addEventListener("contextmenu", onContextMenu);
+    renderer.domElement.addEventListener("wheel", onWheel, { passive: false });
     frameId = requestAnimationFrame(animate);
 
     return () => {
@@ -814,6 +940,7 @@ export default function WorldView({ api, token, user, worldId, onExit }) {
       window.removeEventListener("mousemove", onMouseMove);
       renderer.domElement.removeEventListener("pointerdown", onPointerDown);
       renderer.domElement.removeEventListener("contextmenu", onContextMenu);
+      renderer.domElement.removeEventListener("wheel", onWheel);
       renderer.dispose();
       blockMaterials.forEach((materialSet) => {
         materialSet.forEach((material) => {
@@ -851,6 +978,41 @@ export default function WorldView({ api, token, user, worldId, onExit }) {
           <span key={player.socketId}>{player.user.displayName}</span>
         ))}
       </div>
+
+      {chatPanelVisible && (
+        <section className={chatOpen ? "chat-panel active" : "chat-panel"} aria-live="polite">
+          {visibleChatMessages.length > 0 && (
+            <div className="chat-messages">
+              {visibleChatMessages.map((message) => {
+                const opacity = chatOpen ? 1 : getChatPreviewOpacity(message, chatNow);
+                const displayName = message.user?.displayName || message.user?.username || "Player";
+
+                return (
+                  <div className="chat-message" key={`${message.id}-${message.sentAt}`} style={{ opacity }}>
+                    <span className="chat-author">&lt;{displayName}&gt;</span>
+                    <span className="chat-text">{message.text}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {chatOpen && (
+            <form className="chat-form" onSubmit={sendChatMessage}>
+              <textarea
+                ref={chatInputRef}
+                value={chatInput}
+                onChange={(event) => setChatInput(event.target.value)}
+                onKeyDown={handleChatInputKeyDown}
+                maxLength={CHAT_MESSAGE_MAX_LENGTH}
+                placeholder="Message"
+                rows={2}
+                wrap="soft"
+              />
+            </form>
+          )}
+        </section>
+      )}
 
       <div className="hotbar">
         {hotbarSlots.map((blockId, index) => {
@@ -914,6 +1076,15 @@ export default function WorldView({ api, token, user, worldId, onExit }) {
 function upsertPlayer(players, nextPlayer) {
   const without = players.filter((player) => player.socketId !== nextPlayer.socketId);
   return [...without, nextPlayer];
+}
+
+function getChatPreviewOpacity(message, now) {
+  const age = now - message.receivedAt;
+  const fadeStartsAt = CHAT_PREVIEW_VISIBLE_MS - CHAT_PREVIEW_FADE_MS;
+
+  if (age <= fadeStartsAt) return 1;
+
+  return Math.max(0, (CHAT_PREVIEW_VISIBLE_MS - age) / CHAT_PREVIEW_FADE_MS);
 }
 
 function prepareAvatarSource(fbx) {

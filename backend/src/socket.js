@@ -6,6 +6,7 @@ const {
   listAnimals,
   updateAnimalPosition
 } = require("./services/animalService");
+const { createDirectMessage } = require("./services/directMessageService");
 const { getWorldForUser, listBlocks, saveBlockChange } = require("./services/worldService");
 
 const sessions = new Map();
@@ -14,9 +15,15 @@ const ANIMAL_TICK_MS = 100;
 const ANIMAL_SPEED = 1.4;
 const ANIMAL_BROADCAST_MS = 120;
 const ANIMAL_PERSIST_MS = 1000;
+const CHAT_MESSAGE_MAX_LENGTH = 200;
+let nextChatMessageId = 1;
 
 function roomName(worldId) {
   return `world:${worldId}`;
+}
+
+function userRoomName(userId) {
+  return `user:${userId}`;
 }
 
 function reply(ack, payload) {
@@ -37,6 +44,16 @@ function publicPlayer(socketId, session) {
 
 function normalizeMovementAnimation(animation) {
   return animation === "run" ? "run" : "idle";
+}
+
+function createChatMessage(worldId, user, text) {
+  return {
+    id: nextChatMessageId++,
+    worldId,
+    user,
+    text,
+    sentAt: new Date().toISOString()
+  };
 }
 
 function publicAnimal(animal) {
@@ -189,6 +206,8 @@ function configureSockets(io) {
   });
 
   io.on("connection", (socket) => {
+    socket.join(userRoomName(socket.user.id));
+
     socket.on("world:join", (payload, ack) => {
       try {
         const worldId = Number(payload?.worldId);
@@ -271,6 +290,36 @@ function configureSockets(io) {
         io.to(roomName(world.id)).emit("block:changed", { block });
 
         return reply(ack, { ok: true, block });
+      } catch (error) {
+        return reply(ack, { ok: false, error: error.message });
+      }
+    });
+
+    socket.on("chat:send", (payload, ack) => {
+      const session = sessions.get(socket.id);
+      if (!session) {
+        return reply(ack, { ok: false, error: "Join a world before sending chat messages." });
+      }
+
+      const text = String(payload?.text || "").trim().slice(0, CHAT_MESSAGE_MAX_LENGTH);
+      if (!text) {
+        return reply(ack, { ok: false, error: "Message cannot be empty." });
+      }
+
+      const message = createChatMessage(session.worldId, socket.user, text);
+      io.to(roomName(session.worldId)).emit("chat:message", { message });
+
+      return reply(ack, { ok: true, message });
+    });
+
+    socket.on("dm:send", (payload, ack) => {
+      try {
+        const receiverId = Number(payload?.receiverId);
+        const message = createDirectMessage(socket.user.id, receiverId, payload);
+
+        io.to(userRoomName(socket.user.id)).to(userRoomName(receiverId)).emit("dm:message", { message });
+
+        return reply(ack, { ok: true, message });
       } catch (error) {
         return reply(ack, { ok: false, error: error.message });
       }

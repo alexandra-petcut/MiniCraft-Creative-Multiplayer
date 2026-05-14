@@ -83,6 +83,5 @@ export default function App() {
     );
   }
 
-  return <Dashboard api={api} user={user} onLogout={handleLogout} onEnterWorld={setActiveWorldId} />;
+  return <Dashboard api={api} token={token} user={user} onLogout={handleLogout} onEnterWorld={setActiveWorldId} />;
 }
-

@@ -36,6 +36,17 @@ db.exec(`
     FOREIGN KEY(friendId) REFERENCES users(id) ON DELETE CASCADE
   );
 
+  CREATE TABLE IF NOT EXISTS friend_requests (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    requesterId INTEGER NOT NULL,
+    receiverId INTEGER NOT NULL,
+    createdAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(requesterId, receiverId),
+    CHECK(requesterId <> receiverId),
+    FOREIGN KEY(requesterId) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY(receiverId) REFERENCES users(id) ON DELETE CASCADE
+  );
+
   CREATE TABLE IF NOT EXISTS worlds (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
@@ -89,6 +100,16 @@ db.exec(`
     updatedAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(worldId) REFERENCES worlds(id) ON DELETE CASCADE,
     FOREIGN KEY(spawnedByUserId) REFERENCES users(id) ON DELETE CASCADE
+  );
+
+  CREATE TABLE IF NOT EXISTS direct_messages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    senderId INTEGER NOT NULL,
+    receiverId INTEGER NOT NULL,
+    text TEXT NOT NULL,
+    createdAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(senderId) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY(receiverId) REFERENCES users(id) ON DELETE CASCADE
   );
 `);
 
