@@ -75,6 +75,21 @@ db.exec(`
     FOREIGN KEY(placedByUserId) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY(updatedByUserId) REFERENCES users(id) ON DELETE CASCADE
   );
+
+  CREATE TABLE IF NOT EXISTS world_animals (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    worldId INTEGER NOT NULL,
+    animalType TEXT NOT NULL,
+    x REAL NOT NULL,
+    y REAL NOT NULL,
+    z REAL NOT NULL,
+    yaw REAL NOT NULL DEFAULT 0,
+    spawnedByUserId INTEGER NOT NULL,
+    createdAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(worldId) REFERENCES worlds(id) ON DELETE CASCADE,
+    FOREIGN KEY(spawnedByUserId) REFERENCES users(id) ON DELETE CASCADE
+  );
 `);
 
 function transaction(callback) {

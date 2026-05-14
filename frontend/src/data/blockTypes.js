@@ -7,8 +7,24 @@ export const BLOCK_TYPES = [
   { id: "red", label: "Red", color: "#d63f3f" },
   { id: "blue", label: "Blue", color: "#356bd8" },
   { id: "yellow", label: "Yellow", color: "#e2c440" },
-  { id: "white", label: "White", color: "#f4f1e8" }
+  { id: "white", label: "White", color: "#f4f1e8" },
+  { id: "brick", label: "Brick", color: "#a84a36" },
+  { id: "quartz", label: "Quartz", color: "#efede4" },
+  { id: "red_clay", label: "Red Clay", color: "#a34f3d" },
+  { id: "blue_clay", label: "Blue Clay", color: "#376db2" },
+  { id: "green_clay", label: "Green Clay", color: "#6d8736" },
+  { id: "purple_clay", label: "Purple Clay", color: "#7742a0" },
+  { id: "orange_clay", label: "Orange Clay", color: "#d76b1f" },
+  { id: "black_clay", label: "Black Clay", color: "#1f2328" },
+  { id: "marble", label: "Marble", color: "#e5e2dc" },
+  { id: "sandstone", label: "Sandstone", color: "#d8bd6f" },
+  { id: "slate", label: "Slate", color: "#526172" },
+  { id: "basalt", label: "Basalt", color: "#272932" },
+  { id: "copper", label: "Copper", color: "#b7654a" },
+  { id: "ice", label: "Ice", color: "#9eddf0", transparent: true },
+  { id: "chicken_egg", label: "Chicken Egg", color: "#f6e9c7", kind: "spawnEgg", animalType: "chicken" },
+  { id: "pig_egg", label: "Pig Egg", color: "#f5a7ba", kind: "spawnEgg", animalType: "pig" },
+  { id: "wolf_egg", label: "Wolf Egg", color: "#c8ccd5", kind: "spawnEgg", animalType: "wolf" }
 ];
 
 export const BLOCK_TYPE_MAP = new Map(BLOCK_TYPES.map((block) => [block.id, block]));
-
