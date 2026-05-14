@@ -5,7 +5,7 @@ import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader.js";
 import { clone as cloneSkeleton } from "three/examples/jsm/utils/SkeletonUtils.js";
 import characterModelUrl from "../../assets/Male Character 1.fbx?url";
 import { API_URL } from "../api/client";
-import { BLOCK_TYPES, BLOCK_TYPE_MAP } from "../data/blockTypes";
+import { BLOCK_TYPES } from "../data/blockTypes";
 import { BLOCK_TEXTURES } from "../data/blockTextures";
 
 const WORLD_SIZE = 100;
@@ -574,7 +574,7 @@ export default function WorldView({ api, token, user, worldId, onExit }) {
             onClick={() => setSelectedBlock(block.id)}
             title={`${index + 1}: ${block.label}`}
           >
-            <span style={{ background: BLOCK_TYPE_MAP.get(block.id).color }} />
+            <span style={{ backgroundImage: `url("${BLOCK_TEXTURES[block.id].front}")` }} />
             <small>{index + 1}</small>
           </button>
         ))}

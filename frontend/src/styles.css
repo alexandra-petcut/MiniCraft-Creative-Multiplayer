@@ -439,7 +439,11 @@ code {
   width: 100%;
   height: 100%;
   border-radius: 4px;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.16);
+  image-rendering: pixelated;
 }
 
 .hotbar-item small {
@@ -493,4 +497,3 @@ code {
     justify-content: flex-start;
   }
 }
-
